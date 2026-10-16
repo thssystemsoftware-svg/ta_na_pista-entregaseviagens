@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tá Na Pista - Entregas Rápidas e Viagens de Moto em Londrina e Região</title>
+
+    <!-- SEO & Social Media Meta Tags (WhatsApp Link Preview) -->
+    <meta name="description" content="Serviço rápido de entregas de encomendas e moto-táxi para Londrina, Cambé, Ibiporã, Rolândia e Arapongas. Calcule o frete ou sua corrida em tempo real.">
+    <meta name="keywords" content="moto táxi londrina, entregas rápidas londrina, motoboy cambe, ibipora, rolandia, arapongas, ta na pista">
+    <meta property="og:title" content="Tá Na Pista - Entregas Rápidas e Viagens de Moto">
+    <meta property="og:description" content="Tabela fixa de entregas e cálculo de rota em tempo real por R$ 2,50/KM. Peça pelo WhatsApp!">
+    <meta property="og:type" content="website">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Orbitron -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Interactive Dark Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#080b11',
+                            card: '#121824',
+                            accent: '#00f2fe',
+                            pink: '#f80759',
+                            purple: '#bc4e9c',
+                            green: '#25D366'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #080b11;
+            color: #f3f4f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .neon-border-blue {
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3), inset 0 0 15px rgba(0, 242, 254, 0.15);
+            border: 1px solid rgba(0, 242, 254, 0.5) !important;
+        }
+
+        .neon-border-pink {
+            box-shadow: 0 0 15px rgba(248, 7, 89, 0.3), inset 0 0 15px rgba(248, 7, 89, 0.15);
+            border: 1px solid rgba(248, 7, 89, 0.5) !important;
+        }
+
+        .glass-card {
+            background: rgba(18, 24, 36, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card-hover:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 242, 254, 0.3);
+            box-shadow: 0 12px 30px -10px rgba(0, 242, 254, 0.2);
+        }
+
+        .bg-grid-pattern {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080b11;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f293d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f2fe;
+        }
+
+        /* Focus outline accessibility */
+        a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 2px solid #00f2fe !important;
+            outline-offset: 2px;
+        }
+
+        /* Leaflet Dark Map Overrides & Esri Dark Filter (No API Key / No 403 Block) */
+        #viagens-map {
+            width: 100% !important;
+            height: 300px !important;
+            background-color: #0d121d !important;
+            border-radius: 1rem;
+            z-index: 10;
+        }
+
+        @media (min-width: 640px) {
+            #viagens-map {
+                height: 360px !important;
+            }
+        }
+
+        .map-tiles-dark-filter {
+            filter: invert(100%) hue-rotate(180deg) brightness(88%) contrast(115%) saturate(85%);
+        }
+
+        .leaflet-container {
+            background-color: #0d121d !important;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(8, 11, 17, 0.85) !important;
+            color: #94a3b8 !important;
+            font-size: 10px !important;
+        }
+        .leaflet-control-attribution a {
+            color: #00f2fe !important;
+        }
+
+        .custom-pin-origin {
+            width: 32px !important;
+            height: 32px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #00f2fe;
+            color: #000;
+            font-weight: bold;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #00f2fe;
+            border: 2px solid #fff;
+            font-size: 14px;
+        }
+
+        .custom-pin-dest {
+            width: 32px !important;
+            height: 32px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #f80759;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #f80759;
+            border: 2px solid #fff;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="bg-grid-pattern min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-50 glass-card border-b border-white/10 px-4 lg:px-8 py-3" role="banner">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            
+            <a href="#" class="flex items-center gap-3 group" aria-label="Tá Na Pista - Início">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-fuchsia-500 to-pink-500 p-0.5 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
+                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid fa-motorcycle text-cyan-400 text-lg group-hover:rotate-6 transition-transform" aria-hidden="true"></i>
+                    </div>
+                </div>
+                <div>
+                    <span class="font-display text-xl font-black tracking-wider bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-pink-500 bg-clip-text text-transparent uppercase">
+                        TÁ NA PISTA
+                    </span>
+                    <span class="block text-[11px] uppercase font-bold tracking-widest text-slate-400 -mt-1">
+                        Entregas & Viagens
+                    </span>
+                </div>
+            </a>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center bg-slate-900/90 p-1.5 rounded-2xl border border-white/10 shadow-inner w-full sm:w-auto" role="navigation" aria-label="Navegação Principal">
+                <button type="button" onclick="switchTab('entregas')" id="tab-entregas-btn"
+                        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 neon-border-blue bg-cyan-950/60 text-cyan-300"
+                        aria-selected="true" aria-controls="tab-entregas">
+                    <i class="fa-solid fa-box-archive text-base" aria-hidden="true"></i>
+                    <span>Entregas Rápidas</span>
+                </button>
+                <button type="button" onclick="switchTab('viagens')" id="tab-viagens-btn"
+                        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5"
+                        aria-selected="false" aria-controls="tab-viagens">
+                    <i class="fa-solid fa-motorcycle text-base" aria-hidden="true"></i>
+                    <span>Viagens (Moto-Táxi)</span>
+                </button>
+            </nav>
+
+            <a href="https://wa.me/5543988517847" target="_blank" rel="noopener noreferrer" 
+               class="hidden lg:flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20"
+               aria-label="Atendimento via WhatsApp (43) 98851-7847">
+                <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i>
+                <span>(43) 98851-7847</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 flex-grow w-full" role="main">
+        
+        <!-- Hero Title Section -->
+        <div class="text-center max-w-3xl mx-auto mb-8">
+            <div id="hero-badge" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-semibold mb-3 backdrop-blur-md">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                </span>
+                <span>Atendimento Rápido em Londrina, Cambé, Ibiporã, Rolândia e Arapongas</span>
+            </div>
+            
+            <h1 id="hero-title" class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-3">
+                Sua encomenda no lugar certo, <br class="hidden sm:block">
+                <span class="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 bg-clip-text text-transparent">
+                    no tempo certo.
+                </span>
+            </h1>
+            <p id="hero-subtitle" class="text-slate-300 text-xs sm:text-sm max-w-2xl mx-auto">
+                Consulte nossa tabela fixa de encomendas por cidade ou simule seu envio imediato.
+            </p>
+        </div>
+
+        <!-- Notification / Status Banner -->
+        <div id="status-toast" class="hidden max-w-2xl mx-auto mb-6 p-4 rounded-2xl glass-card border border-cyan-500/40 flex items-center gap-3 text-xs sm:text-sm text-cyan-200 shadow-xl transition-all" role="status" aria-live="polite">
+            <i id="status-toast-icon" class="fa-solid fa-circle-info text-cyan-400 text-lg shrink-0" aria-hidden="true"></i>
+            <span id="status-toast-msg">Mensagem de aviso</span>
+        </div>
+
+        <!-- TAB 1: ENTREGAS DE ENCOMENDAS -->
+        <div id="tab-entregas" class="space-y-12">
+            <section class="glass-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl relative overflow-hidden" aria-labelledby="entregas-simulador-title">
+                <div class="absolute -top-24 -left-24 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -right-24 w-60 h-60 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl text-cyan-400">
+                        <i class="fa-solid fa-calculator text-xl" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h2 id="entregas-simulador-title" class="text-xl font-bold text-white">Simulador de Entrega de Encomendas</h2>
+                        <p class="text-xs text-slate-300">Selecione a cidade e a modalidade para calcular o valor instantâneo</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div class="lg:col-span-7 space-y-6">
+                        
+                        <!-- City Selector Grid -->
+                        <div>
+                            <span class="block text-xs font-semibold text-slate-200 uppercase tracking-wider mb-3">
+                                1. Cidade de Destino:
+                            </span>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                <button type="button" onclick="selectEntregasCity('londrina')" id="btn-entregas-londrina" 
+                                        class="entregas-city-btn flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center group bg-slate-900/60 border-white/10 hover:border-cyan-500/50">
+                                    <i class="fa-solid fa-location-dot text-base text-slate-400 group-hover:text-cyan-400 mb-1" aria-hidden="true"></i>
+                                    <span class="text-xs font-bold text-white">Londrina</span>
+                                </button>
+                                <button type="button" onclick="selectEntregasCity('cambe')" id="btn-entregas-cambe" 
+                                        class="entregas-city-btn flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center group bg-slate-900/60 border-white/10 hover:border-cyan-500/50">
+                                    <i class="fa-solid fa-location-dot text-base text-slate-400 group-hover:text-cyan-400 mb-1" aria-hidden="true"></i>
+                                    <span class="text-xs font-bold text-white">Cambé</span>
+                                </button>
+                                <button type="button" onclick="selectEntregasCity('ibipora')" id="btn-entregas-ibipora" 
+                                        class="entregas-city-btn flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center group bg-slate-900/60 border-white/10 hover:border-cyan-500/50">
+                                    <i class="fa-solid fa-location-dot text-base text-slate-400 group-hover:text-cyan-400 mb-1" aria-hidden="true"></i>
+                                    <span class="text-xs font-bold text-white">Ibiporã</span>
+                                </button>
+                                <button type="button" onclick="selectEntregasCity('rolandia')" id="btn-entregas-rolandia" 
+                                        class="entregas-city-btn flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center group bg-slate-900/60 border-white/10 hover:border-cyan-500/50">
+                                    <i class="fa-solid fa-location-dot text-base text-slate-400 group-hover:text-cyan-400 mb-1" aria-hidden="true"></i>
+                                    <span class="text-xs font-bold text-white">Rolândia</span>
+                                </button>
+                                <button type="button" onclick="selectEntregasCity('arapongas')" id="btn-entregas-arapongas" 
+                                        class="entregas-city-btn flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center group bg-slate-900/60 border-white/10 hover:border-cyan-500/50">
+                                    <i class="fa-solid fa-location-dot text-base text-slate-400 group-hover:text-cyan-400 mb-1" aria-hidden="true"></i>
+                                    <span class="text-xs font-bold text-white">Arapongas</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Mode Selector -->
+                        <div>
+                            <span class="block text-xs font-semibold text-slate-200 uppercase tracking-wider mb-3">
+                                2. Modalidade de Entrega:
+                            </span>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <button type="button" onclick="selectEntregasMode('inRota')" id="entregas-mode-inRota"
+                                        class="entregas-mode-btn relative p-4 rounded-2xl border transition-all text-left flex items-start gap-4 bg-slate-900/60 border-white/10 hover:border-cyan-400/50">
+                                    <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 shrink-0">
+                                        <i class="fa-solid fa-seedling text-lg" aria-hidden="true"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-white">IN ROTA</span>
+                                            <span class="text-[11px] bg-amber-500/20 text-amber-300 font-semibold px-2 py-0.5 rounded-full border border-amber-500/30">Econômica</span>
+                                        </div>
+                                        <p class="text-xs text-slate-300 mt-1">Desconto no frete aguardando o agrupamento de pedidos na região.</p>
+                                    </div>
+                                </button>
+
+                                <button type="button" onclick="selectEntregasMode('flash')" id="entregas-mode-flash"
+                                        class="entregas-mode-btn relative p-4 rounded-2xl border transition-all text-left flex items-start gap-4 bg-slate-900/60 border-white/10 hover:border-pink-500/50">
+                                    <div class="p-3 bg-pink-500/10 border border-pink-500/30 rounded-xl text-pink-400 shrink-0">
+                                        <i class="fa-solid fa-bolt text-lg" aria-hidden="true"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-white">FLASH</span>
+                                            <span class="text-[11px] bg-pink-500/20 text-pink-300 font-semibold px-2 py-0.5 rounded-full border border-pink-500/30">Prioritária</span>
+                                        </div>
+                                        <p class="text-xs text-slate-300 mt-1">Coleta e entrega exclusivas e imediatas para o seu pedido.</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Parcel Information Fields -->
+                        <div class="space-y-3 pt-2">
+                            <span class="block text-xs font-semibold text-slate-200 uppercase tracking-wider">
+                                3. Informações da Encomenda (Opcionais):
+                            </span>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="entregas-input-solicitante" class="block text-xs text-slate-300 mb-1">Nome do Solicitante</label>
+                                    <input type="text" id="entregas-input-solicitante" placeholder="Seu Nome" 
+                                           oninput="updateEntregasSummary()"
+                                           class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors">
+                                </div>
+                                <div>
+                                    <label for="entregas-input-destinatario" class="block text-xs text-slate-300 mb-1">Nome do Destinatário</label>
+                                    <input type="text" id="entregas-input-destinatario" placeholder="Quem vai receber" 
+                                           oninput="updateEntregasSummary()"
+                                           class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="entregas-input-origem" class="block text-xs text-slate-300 mb-1">Endereço de Retirada</label>
+                                    <input type="text" id="entregas-input-origem" placeholder="Rua/Bairro de Retirada" 
+                                           oninput="updateEntregasSummary()"
+                                           class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors">
+                                </div>
+                                <div>
+                                    <label for="entregas-input-destino" class="block text-xs text-slate-300 mb-1">Endereço de Entrega</label>
+                                    <input type="text" id="entregas-input-destino" placeholder="Rua/Bairro de Destino" 
+                                           oninput="updateEntregasSummary()"
+                                           class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="entregas-input-item" class="block text-xs text-slate-300 mb-1">Descrição do Item</label>
+                                <input type="text" id="entregas-input-item" placeholder="Ex: Chaves, Documentos, Caixa, Alimentos" 
+                                       oninput="updateEntregasSummary()"
+                                       class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Summary Card -->
+                    <div class="lg:col-span-5 bg-slate-950/90 rounded-2xl p-6 border border-white/10 flex flex-col justify-between h-full relative overflow-hidden">
+                        <div class="space-y-5">
+                            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                                <span class="text-xs uppercase font-semibold text-slate-300 tracking-wider">Resumo do Pedido</span>
+                                <span id="entregas-badge-mode" class="text-xs font-bold px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">IN ROTA</span>
+                            </div>
+
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-300"><i class="fa-solid fa-city mr-2 text-cyan-400" aria-hidden="true"></i>Cidade:</span>
+                                    <span id="entregas-summary-city" class="font-bold text-white">Londrina</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-300"><i class="fa-solid fa-truck-fast mr-2 text-cyan-400" aria-hidden="true"></i>Modalidade:</span>
+                                    <span id="entregas-summary-mode-name" class="font-bold text-amber-300">In Rota (Econômica)</span>
+                                </div>
+
+                                <div id="entregas-container-solicitante" class="hidden flex justify-between items-center text-xs pt-1 border-t border-white/5">
+                                    <span class="text-slate-400">Solicitante:</span>
+                                    <span id="entregas-summary-solicitante" class="text-slate-200 font-medium truncate max-w-[180px]">--</span>
+                                </div>
+                                <div id="entregas-container-destinatario" class="hidden flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">Destinatário:</span>
+                                    <span id="entregas-summary-destinatario" class="text-slate-200 font-medium truncate max-w-[180px]">--</span>
+                                </div>
+                                <div id="entregas-container-origem" class="hidden flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">Retirada:</span>
+                                    <span id="entregas-summary-origem" class="text-slate-200 font-medium truncate max-w-[180px]">--</span>
+                                </div>
+                                <div id="entregas-container-destino" class="hidden flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">Entrega:</span>
+                                    <span id="entregas-summary-destino" class="text-slate-200 font-medium truncate max-w-[180px]">--</span>
+                                </div>
+                                <div id="entregas-container-item" class="hidden flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">Item:</span>
+                                    <span id="entregas-summary-item" class="text-slate-200 font-medium truncate max-w-[180px]">--</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900/90 rounded-2xl p-5 border border-white/5 text-center my-4">
+                                <span class="text-xs text-slate-300 uppercase tracking-widest block mb-1">Valor do Frete</span>
+                                <div class="flex items-baseline justify-center gap-1">
+                                    <span class="text-lg font-bold text-cyan-400">R$</span>
+                                    <span id="entregas-summary-price" class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight">10,00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 space-y-3">
+                            <a id="btn-whatsapp-entregas" href="#" target="_blank" rel="noopener noreferrer"
+                               class="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-black font-extrabold text-base py-4 px-6 rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                                <i class="fa-brands fa-whatsapp text-2xl" aria-hidden="true"></i>
+                                <span>Solicitar Entrega no WhatsApp</span>
+                            </a>
+                            <p class="text-xs text-center text-slate-400 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-shield-halved text-emerald-400" aria-hidden="true"></i>
+                                WhatsApp oficial: (43) 98851-7847
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Matrix Grid Section -->
+            <section id="tabela-precos" aria-labelledby="tabela-precos-title">
+                <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Tabela Oficial de Encomendas</span>
+                        <h2 id="tabela-precos-title" class="text-2xl sm:text-3xl font-extrabold text-white">Preços Fixos por Cidade</h2>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs">
+                        <span class="flex items-center gap-1.5 text-cyan-300">
+                            <span class="w-3 h-3 rounded-full bg-cyan-500 inline-block"></span> IN ROTA (Econômica)
+                        </span>
+                        <span class="flex items-center gap-1.5 text-pink-400">
+                            <span class="w-3 h-3 rounded-full bg-pink-500 inline-block"></span> FLASH (Prioritária)
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    
+                    <div class="glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="font-display font-bold text-base text-white">LONDRINA</span>
+                                <i class="fa-solid fa-location-dot text-cyan-400 group-hover:scale-125 transition-transform" aria-hidden="true"></i>
+                            </div>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-cyan-300">IN ROTA</span>
+                                        <span class="text-xs text-slate-400">Econômica</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-cyan-400">R$ 10,00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-pink-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-pink-300">FLASH</span>
+                                        <span class="text-xs text-slate-400">Prioritária</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-pink-400">R$ 20,00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="selectEntregasCity('londrina'); scrollToSimulador();" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-xs font-semibold text-slate-200 hover:text-cyan-300 transition-all">
+                            Selecionar Londrina <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="font-display font-bold text-base text-white">CAMBÉ</span>
+                                <i class="fa-solid fa-location-dot text-cyan-400 group-hover:scale-125 transition-transform" aria-hidden="true"></i>
+                            </div>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-cyan-300">IN ROTA</span>
+                                        <span class="text-xs text-slate-400">Econômica</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-cyan-400">R$ 25,00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-pink-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-pink-300">FLASH</span>
+                                        <span class="text-xs text-slate-400">Prioritária</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-pink-400">R$ 50,00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="selectEntregasCity('cambe'); scrollToSimulador();" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-xs font-semibold text-slate-200 hover:text-cyan-300 transition-all">
+                            Selecionar Cambé <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="font-display font-bold text-base text-white">IBIPORÃ</span>
+                                <i class="fa-solid fa-location-dot text-cyan-400 group-hover:scale-125 transition-transform" aria-hidden="true"></i>
+                            </div>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-cyan-300">IN ROTA</span>
+                                        <span class="text-xs text-slate-400">Econômica</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-cyan-400">R$ 30,00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-pink-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-pink-300">FLASH</span>
+                                        <span class="text-xs text-slate-400">Prioritária</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-pink-400">R$ 60,00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="selectEntregasCity('ibipora'); scrollToSimulador();" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-xs font-semibold text-slate-200 hover:text-cyan-300 transition-all">
+                            Selecionar Ibiporã <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="font-display font-bold text-base text-white">ROLÂNDIA</span>
+                                <i class="fa-solid fa-location-dot text-cyan-400 group-hover:scale-125 transition-transform" aria-hidden="true"></i>
+                            </div>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-cyan-300">IN ROTA</span>
+                                        <span class="text-xs text-slate-400">Econômica</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-cyan-400">R$ 50,00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-pink-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-pink-300">FLASH</span>
+                                        <span class="text-xs text-slate-400">Prioritária</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-pink-400">R$ 70,00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="selectEntregasCity('rolandia'); scrollToSimulador();" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-xs font-semibold text-slate-200 hover:text-cyan-300 transition-all">
+                            Selecionar Rolândia <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="glass-card glass-card-hover rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between group">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="font-display font-bold text-base text-white">ARAPONGAS</span>
+                                <i class="fa-solid fa-location-dot text-cyan-400 group-hover:scale-125 transition-transform" aria-hidden="true"></i>
+                            </div>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-cyan-300">IN ROTA</span>
+                                        <span class="text-xs text-slate-400">Econômica</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-cyan-400">R$ 60,00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-pink-500/20">
+                                    <div>
+                                        <span class="block text-xs font-semibold text-pink-300">FLASH</span>
+                                        <span class="text-xs text-slate-400">Prioritária</span>
+                                    </div>
+                                    <span class="text-lg font-bold text-pink-400">R$ 80,00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="selectEntregasCity('arapongas'); scrollToSimulador();" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-xs font-semibold text-slate-200 hover:text-cyan-300 transition-all">
+                            Selecionar Arapongas <i class="fa-solid fa-arrow-right ml-1" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: VIAGENS / MOTO-TÁXI -->
+        <div id="tab-viagens" class="hidden space-y-8">
+            <section class="glass-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl relative overflow-hidden" aria-labelledby="viagens-simulador-title">
+                <div class="absolute -top-24 -left-24 w-60 h-60 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -right-24 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-white/10">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-pink-500/10 border border-pink-500/30 rounded-2xl text-pink-400">
+                            <i class="fa-solid fa-motorcycle text-2xl" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <h2 id="viagens-simulador-title" class="text-xl font-bold text-white">Viagens & Moto-Táxi</h2>
+                            <p class="text-xs text-slate-300">Cálculo de rota em tempo real pelas ruas de Londrina e Região</p>
+                        </div>
+                    </div>
+
+                    <div class="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/40 px-4 py-2 rounded-2xl text-pink-300 font-bold text-sm">
+                        <i class="fa-solid fa-tag" aria-hidden="true"></i>
+                        <span>Tarifa Oficial: <strong class="text-white text-base">R$ 2,50 / KM</strong></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    <div class="lg:col-span-7 space-y-5">
+                        
+                        <div class="space-y-4 bg-slate-900/60 p-5 rounded-2xl border border-white/5">
+                            <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center justify-between">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-route" aria-hidden="true"></i>
+                                    Endereços da Viagem
+                                </span>
+                                <span class="text-xs text-slate-400 font-normal">Busca por Rua + Número Exato</span>
+                            </h3>
+
+                            <!-- Origin Input with Hybrid Autocomplete Dropdown -->
+                            <div class="relative" id="wrapper-autocomplete-origem">
+                                <label for="viagens-input-origem" class="block text-xs text-slate-300 mb-1 font-semibold">📍 Ponto de Origem (Embarque)</label>
+                                <div class="relative">
+                                    <input type="text" id="viagens-input-origem" 
+                                           autocomplete="off"
+                                           placeholder="Ex: Av. Higienópolis, 1000, Londrina" 
+                                           value="Av. Higienópolis, 1000, Londrina"
+                                           oninput="handleAddressInput('origem', this.value)"
+                                           onfocus="handleAddressInput('origem', this.value)"
+                                           class="w-full bg-slate-950/90 border border-white/10 rounded-xl pl-10 pr-9 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors">
+                                    <i class="fa-solid fa-circle-dot text-cyan-400 absolute left-3.5 top-3.5 text-sm" aria-hidden="true"></i>
+                                    <i id="spinner-autocomplete-origem" class="fa-solid fa-spinner animate-spin text-cyan-400 absolute right-3.5 top-3.5 text-sm hidden" aria-hidden="true"></i>
+                                </div>
+                                <div id="dropdown-autocomplete-origem" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-slate-900/95 backdrop-blur-xl border border-cyan-500/40 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-white/5" role="listbox" aria-label="Sugestões de endereço de origem"></div>
+                            </div>
+
+                            <!-- Destination Input with Photon Autocomplete Dropdown -->
+                            <div class="relative" id="wrapper-autocomplete-destino">
+                                <label for="viagens-input-destino" class="block text-xs text-slate-300 mb-1 font-semibold">🏁 Ponto de Destino (Chegada)</label>
+                                <div class="relative">
+                                    <input type="text" id="viagens-input-destino" 
+                                           autocomplete="off"
+                                           placeholder="Ex: Gleba Palhano, Londrina" 
+                                           value="Gleba Palhano, Londrina"
+                                           oninput="handleAddressInput('destino', this.value)"
+                                           onfocus="handleAddressInput('destino', this.value)"
+                                           class="w-full bg-slate-950/90 border border-white/10 rounded-xl pl-10 pr-9 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-pink-400 transition-colors">
+                                    <i class="fa-solid fa-location-dot text-pink-500 absolute left-3.5 top-3.5 text-sm" aria-hidden="true"></i>
+                                    <i id="spinner-autocomplete-destino" class="fa-solid fa-spinner animate-spin text-pink-400 absolute right-3.5 top-3.5 text-sm hidden" aria-hidden="true"></i>
+                                </div>
+                                <div id="dropdown-autocomplete-destino" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-slate-900/95 backdrop-blur-xl border border-pink-500/40 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto divide-y divide-white/5" role="listbox" aria-label="Sugestões de endereço de destino"></div>
+                            </div>
+
+                            <div class="p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/20 text-xs text-cyan-300/90 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-info text-cyan-400 shrink-0" aria-hidden="true"></i>
+                                <span><strong>Sugestões em Tempo Real:</strong> Comece a digitar a rua ou local para ver sugestões automáticas de <strong>Londrina e região</strong>, ou clique em calcular rota.</span>
+                            </div>
+
+                            <!-- Atalhos de locais sugeridos -->
+                            <div>
+                                <span class="block text-xs text-slate-300 mb-1.5 font-medium">Sugestões Rápidas de Destino:</span>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <button type="button" onclick="setQuickDest('Gleba Palhano, Londrina')" class="text-xs bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 px-2.5 py-1 rounded-lg transition-all">
+                                        🏢 Gleba Palhano
+                                    </button>
+                                    <button type="button" onclick="setQuickDest('Shopping Catuaí, Londrina')" class="text-xs bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 px-2.5 py-1 rounded-lg transition-all">
+                                        🛒 Shopping Catuaí
+                                    </button>
+                                    <button type="button" onclick="setQuickDest('Centro, Cambé')" class="text-xs bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 px-2.5 py-1 rounded-lg transition-all">
+                                        🌆 Cambé Centro
+                                    </button>
+                                    <button type="button" onclick="setQuickDest('Aeroporto de Londrina')" class="text-xs bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 px-2.5 py-1 rounded-lg transition-all">
+                                        ✈️ Aeroporto
+                                    </button>
+                                    <button type="button" onclick="setQuickDest('UEL, Londrina')" class="text-xs bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 px-2.5 py-1 rounded-lg transition-all">
+                                        🎓 UEL
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="button" onclick="calculateViagensRoute()" id="btn-calc-route"
+                                    class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold py-3.5 px-5 rounded-xl shadow-lg shadow-cyan-500/20 active:scale-[0.99] transition-all">
+                                <i class="fa-solid fa-map-location-dot text-base" aria-hidden="true"></i>
+                                <span id="btn-calc-route-text">📍 Calcular Rota e Distância Automática</span>
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900/40 p-4 rounded-2xl border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <label for="viagens-input-km" class="block text-xs font-semibold text-slate-300">Distância da Viagem (KM)</label>
+                                <p class="text-xs text-slate-400">Preenchida pela rota na rua ou ajuste manual</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="viagens-input-km" step="0.1" min="0.1" value="2.4"
+                                       oninput="onManualKmInput()"
+                                       class="w-28 bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-center text-sm font-bold text-cyan-300 focus:outline-none focus:border-cyan-400">
+                                <span class="text-xs font-bold text-slate-400">KM</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 pt-1">
+                            <span class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Dados do Passageiro</span>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="viagens-input-nome" class="block text-xs text-slate-300 mb-1">Nome do Passageiro</label>
+                                    <input type="text" id="viagens-input-nome" placeholder="Seu Nome" 
+                                           oninput="updateViagensSummary()"
+                                           class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors">
+                                </div>
+
+                                <div>
+                                    <label for="viagens-input-capacete" class="block text-xs text-slate-300 mb-1">Precisa de Capacete Extra?</label>
+                                    <select id="viagens-input-capacete" onchange="updateViagensSummary()"
+                                            class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-400 transition-colors">
+                                        <option value="Sim">Sim, preciso de capacete</option>
+                                        <option value="Não">Não, tenho meu próprio capacete</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="viagens-input-obs" class="block text-xs text-slate-300 mb-1">Observações / Ponto de Referência</label>
+                                <input type="text" id="viagens-input-obs" placeholder="Ex: Aguardando em frente à portaria de camiseta azul" 
+                                       oninput="updateViagensSummary()"
+                                       class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="lg:col-span-5 space-y-5">
+                        
+                        <!-- Interactive Dark Leaflet Map -->
+                        <div class="bg-slate-950 rounded-2xl border border-white/10 p-2 shadow-xl relative">
+                            <div class="flex items-center justify-between px-3 py-2 border-b border-white/5 mb-2">
+                                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-map text-cyan-400" aria-hidden="true"></i> Mapa de Rota Interativo
+                                </span>
+                                <span id="map-status-badge" class="text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full font-medium">
+                                    Pronto para Calcular
+                                </span>
+                            </div>
+                            
+                            <!-- Leaflet Map Container -->
+                            <div id="viagens-map"></div>
+                            <div class="px-3 pt-2 pb-1 flex items-center justify-between text-[11px] text-slate-400">
+                                <span><i class="fa-solid fa-hand-pointer text-cyan-400 mr-1" aria-hidden="true"></i>Dica: Você pode <strong>arrastar os pinos</strong> no mapa para ajustar o local exato.</span>
+                                <span id="pin-precision-badge" class="text-emerald-400 font-semibold hidden">🎯 Número Exato</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950/90 rounded-2xl p-6 border border-white/10 flex flex-col justify-between space-y-4">
+                            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                                <span class="text-xs uppercase font-semibold text-slate-300 tracking-wider">Resumo da Viagem</span>
+                                <span id="viagens-mode-pill" class="text-xs font-bold px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">MOTO-TÁXI</span>
+                            </div>
+
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">Distância Total:</span>
+                                    <span id="viagens-summary-km" class="font-bold text-cyan-300">2.4 KM</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">Tempo Estimado:</span>
+                                    <span id="viagens-summary-time" class="font-bold text-emerald-300">~5 min</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">Tipo de Medição:</span>
+                                    <span id="viagens-summary-method" class="font-semibold text-slate-200">Via Estrada (OSRM)</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">Cálculo Financeiro:</span>
+                                    <span id="viagens-summary-formula" class="font-bold text-slate-300">2.4 km × R$ 2,50</span>
+                                </div>
+                                <div id="viagens-container-passageiro" class="hidden flex justify-between items-center text-xs pt-1 border-t border-white/5">
+                                    <span class="text-slate-400">Passageiro:</span>
+                                    <span id="viagens-summary-passageiro" class="text-slate-200 font-medium truncate max-w-[180px]">--</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900/90 rounded-2xl p-4 border border-white/5 text-center">
+                                <span class="text-xs text-slate-300 uppercase tracking-widest block mb-1">Valor Estimado da Viagem</span>
+                                <div class="flex items-baseline justify-center gap-1">
+                                    <span class="text-lg font-bold text-pink-400">R$</span>
+                                    <span id="viagens-summary-price" class="text-4xl font-extrabold text-white tracking-tight">6,00</span>
+                                </div>
+                            </div>
+
+                            <a id="btn-whatsapp-viagens" href="#" target="_blank" rel="noopener noreferrer"
+                               class="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-black font-extrabold text-base py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                                <i class="fa-brands fa-whatsapp text-2xl" aria-hidden="true"></i>
+                                <span>Solicitar Viagem no WhatsApp</span>
+                            </a>
+                        </div>
+
+                    </div>
+
+                </div>
+            </section>
+        </div>
+
+        <!-- Differential Features Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 my-12" aria-label="Nossos Diferenciais">
+            <div class="glass-card rounded-2xl p-6 border border-white/10 flex items-start gap-4">
+                <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 shrink-0">
+                    <i class="fa-solid fa-bolt text-2xl" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-base mb-1">Atendimento Imediato</h3>
+                    <p class="text-xs text-slate-300">Pilotos credenciados em prontidão para retiradas e viagens em toda a região metropolitana.</p>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 border border-white/10 flex items-start gap-4">
+                <div class="p-3 bg-fuchsia-500/10 border border-fuchsia-500/30 rounded-xl text-fuchsia-400 shrink-0">
+                    <i class="fa-solid fa-shield-halved text-2xl" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-base mb-1">Segurança & Confiabilidade</h3>
+                    <p class="text-xs text-slate-300">Equipamentos higienizados, manutenção em dia e transporte seguro do seu pacote ou viagem.</p>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 border border-white/10 flex items-start gap-4">
+                <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 shrink-0">
+                    <i class="fa-solid fa-calculator text-2xl" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-white text-base mb-1">Preços Justos</h3>
+                    <p class="text-xs text-slate-300">Tabela transparente sem surpresas ou taxas ocultas. Você sabe exatamente quanto vai pagar.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-card border-t border-white/10 py-8 px-4 lg:px-8 mt-12" role="contentinfo">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div>
+                <div class="flex items-center justify-center md:justify-start gap-2 mb-1">
+                    <i class="fa-solid fa-motorcycle text-cyan-400" aria-hidden="true"></i>
+                    <span class="font-display font-extrabold text-white tracking-wider">TÁ NA PISTA</span>
+                </div>
+                <p class="text-xs text-slate-300">Entregas Rápidas e Moto-Táxi para Londrina, Cambé, Ibiporã, Rolândia e Arapongas.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <a href="https://wa.me/5543988517847" target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-black font-extrabold px-5 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/20"
+                   aria-label="Falar conosco no WhatsApp (43) 98851-7847">
+                    <i class="fa-brands fa-whatsapp text-lg" aria-hidden="true"></i>
+                    <span>(43) 98851-7847</span>
+                </a>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto border-t border-white/5 mt-6 pt-4 text-center text-xs text-slate-400">
+            &copy; Tá Na Pista - Entregas & Viagens. Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <!-- Floating WhatsApp Action Button -->
+    <a href="https://wa.me/5543988517847" target="_blank" rel="noopener noreferrer" aria-label="Chamar no WhatsApp"
+       class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-emerald-500 text-slate-950 rounded-full flex items-center justify-center text-3xl shadow-xl shadow-emerald-500/40 hover:scale-110 active:scale-95 transition-all duration-300">
+        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+    </a>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Global Configuration
+        const PHONE_NUMBER = "5543988517847";
+        const VIAGENS_PRICE_PER_KM = 2.50;
+        // Urban circuity factor when road routing API is unreachable (1.30x straight-line distance)
+        const HAVERSINE_URBAN_FACTOR = 1.30;
+
+        const ENTREGAS_PRICING = {
+            londrina: { name: 'Londrina', inRota: 10, flash: 20 },
+            cambe: { name: 'Cambé', inRota: 25, flash: 50 },
+            ibipora: { name: 'Ibiporã', inRota: 30, flash: 60 },
+            rolandia: { name: 'Rolândia', inRota: 50, flash: 70 },
+            arapongas: { name: 'Arapongas', inRota: 60, flash: 80 }
+        };
+
+        const LONDRINA_CENTER = { lat: -23.3103, lng: -51.1628 };
+        const REGIONAL_CITIES = ['londrina', 'cambé', 'cambe', 'ibiporã', 'ibipora', 'rolândia', 'rolandia', 'arapongas'];
+
+        // Ignore anomalous OSM micro-locality names that confuse users in Londrina
+        const IGNORED_SUBURBS = new Set(['jamaica', 'gleba jacutinga', 'gleba lindóia', 'gleba lindoia', 'sede']);
+
+        // Strictly matched Iconic Landmarks
+        const SPECIFIC_LANDMARKS = [
+            { keys: ['shopping catuai', 'shopping catuaí', 'catuai shopping', 'catuaí shopping'], lat: -23.3441, lng: -51.1852, name: 'Shopping Catuaí, Londrina' },
+            { keys: ['gleba palhano'], lat: -23.3325, lng: -51.1710, name: 'Gleba Palhano, Londrina' },
+            { keys: ['uel', 'universidade estadual de londrina'], lat: -23.3255, lng: -51.1985, name: 'UEL - Universidade Estadual de Londrina' },
+            { keys: ['aeroporto de londrina', 'aeroporto londrina', 'aeroporto'], lat: -23.3298, lng: -51.1352, name: 'Aeroporto de Londrina' },
+            { keys: ['rodoviaria de londrina', 'rodoviária de londrina', 'terminal rodoviario de londrina'], lat: -23.3082, lng: -51.1465, name: 'Rodoviária de Londrina' },
+            { keys: ['boulevard shopping', 'shopping boulevard'], lat: -23.3095, lng: -51.1402, name: 'Boulevard Shopping, Londrina' },
+            { keys: ['royal plaza', 'royal plaza shopping'], lat: -23.3105, lng: -51.1610, name: 'Royal Plaza Shopping, Londrina' },
+            { keys: ['lago igapo', 'lago igapó'], lat: -23.3220, lng: -51.1645, name: 'Lago Igapó, Londrina' },
+            { keys: ['centro, cambe', 'centro, cambé', 'cambe centro', 'cambé centro'], lat: -23.2762, lng: -51.2785, name: 'Centro, Cambé' }
+        ];
+
+        let activeTab = 'entregas';
+        let currentEntregasCity = 'londrina';
+        let currentEntregasMode = 'inRota';
+
+        // Route calculation state
+        let lastRouteDurationMin = 5;
+        let lastRouteMethod = 'Via Estrada (OSRM)';
+
+        // Photon Autocomplete State & Cache
+        const selectedAutocompleteCoords = {
+            origem: null,
+            destino: null
+        };
+        const autocompleteTimers = {
+            origem: null,
+            destino: null
+        };
+        const autocompleteAbortControllers = {
+            origem: null,
+            destino: null
+        };
+
+        let map = null;
+        let originMarker = null;
+        let destMarker = null;
+        let routePolyline = null;
+
+        // Security Helper: Escape HTML to prevent XSS in Leaflet Popups or dynamic DOM inserts
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function calculateHaversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function hasCityInText(text) {
+            const q = text.toLowerCase();
+            return REGIONAL_CITIES.some(city => q.includes(city));
+        }
+
+        function parseStreetAndNumber(rawInput) {
+            let text = rawInput.trim();
+            let detectedCity = 'Londrina';
+            let detectedNeighborhood = '';
+
+            // Remove state suffixes like "- PR", "/ PR", ", PR", "Paraná", "Brasil"
+            text = text.replace(/(?:,|\s+-\s+|\s+|\/)(?:pr|paran[aá]|brasil)\b/gi, '').trim();
+
+            // Detect city anywhere in the string and remove it cleanly
+            const cityMap = [
+                { keys: ['londrina'], name: 'Londrina' },
+                { keys: ['cambé', 'cambe'], name: 'Cambé' },
+                { keys: ['ibiporã', 'ibipora'], name: 'Ibiporã' },
+                { keys: ['rolândia', 'rolandia'], name: 'Rolândia' },
+                { keys: ['arapongas'], name: 'Arapongas' }
+            ];
+
+            for (const cObj of cityMap) {
+                for (const k of cObj.keys) {
+                    const cityRegex = new RegExp(`(?:^|,|\\s+-\\s+|\\s+)${k}(?=$|,|\\s+-\\s+|\\s+)`, 'i');
+                    if (cityRegex.test(text)) {
+                        detectedCity = cObj.name;
+                        text = text.replace(cityRegex, ' ').trim();
+                        break;
+                    }
+                }
+            }
+
+            // Clean up leftover double separators
+            text = text.replace(/\s*,\s*,\s*/g, ', ').replace(/^[, -]+|[, -]+$/g, '').trim();
+
+            let street = text;
+            let houseNumber = '';
+
+            // Case 1: "Rua Caviúna, 10 - Jardim Leonor" or "Rua Caviúna, 10, Leonor" or "Rua Caviúna 10 Leonor"
+            const complexMatch = text.match(/^([A-Za-zÀ-ÿ0-9.\s']+?)(?:,\s*|\s+n[º°.]?\s*|\s+)(\d{1,5}[A-Za-z]?)(?:\s*(?:,|-|–|\s+)\s*(.+))?$/i);
+            if (complexMatch) {
+                street = complexMatch[1].replace(/[, -]+$/, '').trim();
+                houseNumber = complexMatch[2].trim();
+                if (complexMatch[3]) {
+                    detectedNeighborhood = complexMatch[3].replace(/^[, -]+|[, -]+$/g, '').trim();
+                }
+            } else {
+                // Case 2: "Rua Caviúna - Leonor" (street + neighborhood without number)
+                const parts = text.split(/\s*(?:,|-|–)\s*/).filter(Boolean);
+                if (parts.length >= 2) {
+                    street = parts[0].trim();
+                    detectedNeighborhood = parts.slice(1).join(' ').trim();
+                }
+            }
+
+            // Avoid setting neighborhood equal to city name
+            if (detectedNeighborhood && REGIONAL_CITIES.includes(detectedNeighborhood.toLowerCase())) {
+                detectedNeighborhood = '';
+            }
+
+            return {
+                street,
+                houseNumber,
+                neighborhood: detectedNeighborhood,
+                city: detectedCity,
+                fullQuery: rawInput.trim()
+            };
+        }
+
+        function sanitizeNeighbourhood(name, streetName = '') {
+            if (!name) return '';
+            const trimmed = name.trim();
+            const lower = trimmed.toLowerCase();
+            if (IGNORED_SUBURBS.has(lower)) return '';
+            if (streetName && lower === streetName.toLowerCase()) return '';
+            return trimmed;
+        }
+
+        // Interpolates exact coordinate along a street polyline based on Brazilian metric numbering (1m = 1 house number)
+        function interpolatePointAlongPolyline(coordsLatLng, targetMeters) {
+            if (!coordsLatLng || coordsLatLng.length === 0) return null;
+            if (coordsLatLng.length === 1 || targetMeters <= 0) {
+                return { lat: coordsLatLng[0][0], lng: coordsLatLng[0][1] };
+            }
+
+            let accumulatedMeters = 0;
+            for (let i = 0; i < coordsLatLng.length - 1; i++) {
+                const p1 = coordsLatLng[i];
+                const p2 = coordsLatLng[i + 1];
+                const segKm = calculateHaversine(p1[0], p1[1], p2[0], p2[1]);
+                const segMeters = segKm * 1000;
+
+                if (accumulatedMeters + segMeters >= targetMeters) {
+                    const remain = targetMeters - accumulatedMeters;
+                    const ratio = segMeters > 0 ? Math.min(1, Math.max(0, remain / segMeters)) : 0;
+                    return {
+                        lat: p1[0] + (p2[0] - p1[0]) * ratio,
+                        lng: p1[1] + (p2[1] - p1[1]) * ratio
+                    };
+                }
+                accumulatedMeters += segMeters;
+            }
+
+            // If house number exceeds street segment length, clamp near the end of the street
+            const last = coordsLatLng[coordsLatLng.length - 1];
+            return { lat: last[0], lng: last[1] };
+        }
+
+        // Queries Esri ArcGIS World Geocoder (supports PointAddress and StreetAddress interpolation in Brazil)
+        async function fetchEsriExactAddress(parsed) {
+            if (!parsed || !parsed.street) return null;
+
+            const addressParts = [parsed.street];
+            if (parsed.houseNumber) addressParts.push(parsed.houseNumber);
+            if (parsed.neighborhood) addressParts.push(parsed.neighborhood);
+            addressParts.push(parsed.city || 'Londrina');
+            addressParts.push('PR, BRA');
+
+            const singleLine = addressParts.join(', ');
+            const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${encodeURIComponent(singleLine)}&location=${LONDRINA_CENTER.lng},${LONDRINA_CENTER.lat}&distance=65000&countryCode=BRA&outFields=Addr_type,Match_addr,StName,AddNum,Nbrhd,City&maxLocations=3&f=json`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3800);
+
+            try {
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!resp.ok) return null;
+                const data = await resp.json();
+
+                if (data && Array.isArray(data.candidates) && data.candidates.length > 0) {
+                    // Look for PointAddress or StreetAddress match on the requested street
+                    const reqStreetNorm = parsed.street.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    for (const cand of data.candidates) {
+                        if (!cand.location || typeof cand.location.y !== 'number') continue;
+                        const attr = cand.attributes || {};
+                        const addrType = attr.Addr_type || '';
+                        const matchAddrNorm = (cand.address || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+                        const dist = calculateHaversine(LONDRINA_CENTER.lat, LONDRINA_CENTER.lng, cand.location.y, cand.location.x);
+                        if (dist > 70) continue;
+
+                        // If user asked for a house number, only accept Esri result if it resolved a PointAddress/StreetAddress with a number
+                        if (parsed.houseNumber) {
+                            if ((addrType === 'PointAddress' || addrType === 'StreetAddress' || addrType === 'Subaddress') && attr.AddNum) {
+                                return {
+                                    lat: cand.location.y,
+                                    lng: cand.location.x,
+                                    name: `${parsed.street}, ${parsed.houseNumber}${parsed.neighborhood ? ' - ' + parsed.neighborhood : (attr.Nbrhd ? ' - ' + attr.Nbrhd : '')}, ${parsed.city}`,
+                                    precision: 'exact'
+                                };
+                            }
+                        } else if (matchAddrNorm.includes(reqStreetNorm.replace(/^(rua|av|avenida|travessa|alameda)\s+/i, ''))) {
+                            return {
+                                lat: cand.location.y,
+                                lng: cand.location.x,
+                                name: `${parsed.street}${parsed.neighborhood ? ' - ' + parsed.neighborhood : (attr.Nbrhd ? ' - ' + attr.Nbrhd : '')}, ${parsed.city}`,
+                                precision: 'street'
+                            };
+                        }
+                    }
+                }
+                return null;
+            } catch (e) {
+                clearTimeout(timeoutId);
+                return null;
+            }
+        }
+
+        // Resolves exact coordinate along the full street geometry when OSM lacks individual building nodes
+        async function fetchInterpolatedStreetNumberCoord(parsed) {
+            if (!parsed || !parsed.street) return null;
+
+            const q = `${parsed.street}, ${parsed.city || 'Londrina'}, PR, Brasil`;
+            const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&polygon_geojson=1&limit=10&countrycodes=br&viewbox=-51.60,-23.60,-50.80,-23.00&bounded=1&q=${encodeURIComponent(q)}`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+            try {
+                const resp = await fetch(url, {
+                    signal: controller.signal,
+                    headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' }
+                });
+                clearTimeout(timeoutId);
+                if (!resp.ok) return null;
+
+                const segments = await resp.json();
+                if (!Array.isArray(segments) || segments.length === 0) return null;
+
+                // Filter segments that match the street name and optionally neighborhood
+                const targetNeighNorm = (parsed.neighborhood || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                let matchingSegments = segments.filter(s => s.geojson && (s.geojson.type === 'LineString' || s.geojson.type === 'MultiLineString'));
+
+                if (targetNeighNorm && matchingSegments.length > 1) {
+                    const neighFiltered = matchingSegments.filter(s => {
+                        const disp = (s.display_name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                        return disp.includes(targetNeighNorm);
+                    });
+                    if (neighFiltered.length > 0) {
+                        matchingSegments = neighFiltered;
+                    }
+                }
+
+                if (matchingSegments.length === 0) return null;
+
+                // Extract all coordinate chains [[lat, lng], ...]
+                const chains = [];
+                let bestSuburb = parsed.neighborhood || '';
+
+                for (const seg of matchingSegments) {
+                    if (!bestSuburb && seg.address) {
+                        bestSuburb = sanitizeNeighbourhood(seg.address.suburb || seg.address.neighbourhood || seg.address.quarter || '', parsed.street);
+                    }
+                    if (seg.geojson.type === 'LineString') {
+                        chains.push(seg.geojson.coordinates.map(c => [c[1], c[0]]));
+                    } else if (seg.geojson.type === 'MultiLineString') {
+                        for (const line of seg.geojson.coordinates) {
+                            chains.push(line.map(c => [c[1], c[0]]));
+                        }
+                    }
+                }
+
+                if (chains.length === 0) return null;
+
+                // Stitch contiguous ways into a single ordered street polyline from origin to end
+                let orderedChain = chains[0].slice();
+                const used = new Set([0]);
+
+                while (used.size < chains.length) {
+                    let matched = false;
+                    const startPt = orderedChain[0];
+                    const endPt = orderedChain[orderedChain.length - 1];
+
+                    for (let i = 0; i < chains.length; i++) {
+                        if (used.has(i)) continue;
+                        const candidate = chains[i];
+                        const cStart = candidate[0];
+                        const cEnd = candidate[candidate.length - 1];
+
+                        if (calculateHaversine(endPt[0], endPt[1], cStart[0], cStart[1]) < 0.08) {
+                            orderedChain = orderedChain.concat(candidate.slice(1));
+                            used.add(i);
+                            matched = true;
+                            break;
+                        } else if (calculateHaversine(cEnd[0], cEnd[1], startPt[0], startPt[1]) < 0.08) {
+                            orderedChain = candidate.slice(0, -1).concat(orderedChain);
+                            used.add(i);
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched) break;
+                }
+
+                const numVal = parseInt(parsed.houseNumber, 10);
+                if (!isNaN(numVal) && numVal > 0) {
+                    // Brazilian metric street numbering: house number N is ~N meters from street start
+                    const pt = interpolatePointAlongPolyline(orderedChain, numVal);
+                    if (pt) {
+                        const roadName = matchingSegments[0].address?.road || parsed.street;
+                        return {
+                            lat: pt.lat,
+                            lng: pt.lng,
+                            name: `${roadName}, ${parsed.houseNumber}${bestSuburb ? ' - ' + bestSuburb : ''}, ${parsed.city}`,
+                            precision: 'interpolated'
+                        };
+                    }
+                }
+
+                return null;
+            } catch (e) {
+                clearTimeout(timeoutId);
+                return null;
+            }
+        }
+
+        function handleAddressInput(fieldType, rawValue) {
+            if (selectedAutocompleteCoords[fieldType] && selectedAutocompleteCoords[fieldType].queryText !== rawValue.trim()) {
+                selectedAutocompleteCoords[fieldType] = null;
+            }
+
+            updateViagensSummary();
+
+            const query = rawValue.trim();
+            const dropdown = document.getElementById(`dropdown-autocomplete-${fieldType}`);
+            const spinner = document.getElementById(`spinner-autocomplete-${fieldType}`);
+
+            if (autocompleteTimers[fieldType]) {
+                clearTimeout(autocompleteTimers[fieldType]);
+            }
+
+            if (query.length < 3) {
+                if (dropdown) dropdown.classList.add('hidden');
+                if (spinner) spinner.classList.add('hidden');
+                return;
+            }
+
+            autocompleteTimers[fieldType] = setTimeout(() => {
+                fetchHybridAddressSuggestions(fieldType, query);
+            }, 320);
+        }
+
+        function formatNominatimItem(item, parsedQuery) {
+            const addr = item.address || {};
+            const lat = parseFloat(item.lat);
+            const lng = parseFloat(item.lon);
+
+            const road = addr.road || addr.pedestrian || addr.footway || item.name || parsedQuery.street;
+            const houseNumber = addr.house_number || parsedQuery.houseNumber || '';
+            const rawSuburb = parsedQuery.neighborhood || addr.suburb || addr.neighbourhood || addr.quarter || addr.city_district || '';
+            const suburb = sanitizeNeighbourhood(rawSuburb, road);
+            const city = addr.city || addr.town || addr.municipality || parsedQuery.city || 'Londrina';
+
+            let mainTitle = road;
+            if (houseNumber && road && !road.includes(houseNumber)) {
+                mainTitle = `${road}, ${houseNumber}`;
+            }
+
+            const subParts = [];
+            if (suburb) subParts.push(suburb);
+            if (city) subParts.push(city);
+            subParts.push('PR');
+
+            const subTitle = subParts.join(' • ');
+            const fullLabel = `${mainTitle}${suburb ? ' - ' + suburb : ''}, ${city} - PR`;
+
+            return {
+                lat,
+                lng,
+                mainTitle,
+                subTitle,
+                fullLabel,
+                hasExactNumber: Boolean(addr.house_number)
+            };
+        }
+
+        function formatPhotonFeature(feature, parsedQuery) {
+            const props = feature.properties || {};
+            const coords = (feature.geometry && feature.geometry.coordinates) || [];
+            const lng = parseFloat(coords[0]);
+            const lat = parseFloat(coords[1]);
+
+            const houseNumber = props.housenumber || parsedQuery.houseNumber || '';
+            const street = props.street || props.name || parsedQuery.street || '';
+            const rawSuburb = parsedQuery.neighborhood || props.suburb || props.neighbourhood || props.district || '';
+            const suburb = sanitizeNeighbourhood(rawSuburb, street);
+            const city = props.city || props.town || props.municipality || parsedQuery.city || 'Londrina';
+
+            let mainTitle = street;
+            if (houseNumber && street && !street.includes(houseNumber)) {
+                mainTitle = `${street}, ${houseNumber}`;
+            } else if (!mainTitle && props.name) {
+                mainTitle = props.name;
+            }
+
+            if (props.name && props.street && props.name !== props.street) {
+                mainTitle = `${props.name} (${props.street}${houseNumber ? ', ' + houseNumber : ''})`;
+            }
+
+            const subParts = [];
+            if (suburb) subParts.push(suburb);
+            if (city) subParts.push(city);
+            subParts.push('PR');
+
+            const subTitle = subParts.join(' • ');
+            const fullLabel = `${mainTitle}${suburb ? ' - ' + suburb : ''}, ${city} - PR`;
+
+            return {
+                lat,
+                lng,
+                mainTitle: mainTitle || parsedQuery.fullQuery,
+                subTitle,
+                fullLabel,
+                hasExactNumber: Boolean(props.housenumber)
+            };
+        }
+
+        async function fetchHybridAddressSuggestions(fieldType, query) {
+            const dropdown = document.getElementById(`dropdown-autocomplete-${fieldType}`);
+            const spinner = document.getElementById(`spinner-autocomplete-${fieldType}`);
+            if (!dropdown) return;
+
+            if (autocompleteAbortControllers[fieldType]) {
+                autocompleteAbortControllers[fieldType].abort();
+            }
+            const controller = new AbortController();
+            autocompleteAbortControllers[fieldType] = controller;
+
+            if (spinner) spinner.classList.remove('hidden');
+
+            try {
+                const parsed = parseStreetAndNumber(query);
+                const suggestions = [];
+                const seenLabels = new Set();
+
+                // 1. Check local iconic landmarks
+                const qLower = query.toLowerCase();
+                for (const lm of SPECIFIC_LANDMARKS) {
+                    if (lm.name.toLowerCase().includes(qLower) || lm.keys.some(k => k.includes(qLower))) {
+                        suggestions.push({
+                            lat: lm.lat,
+                            lng: lm.lng,
+                            mainTitle: lm.name.split(',')[0],
+                            subTitle: 'Ponto de Referência • Londrina, PR',
+                            fullLabel: lm.name,
+                            queryForPin: lm.name
+                        });
+                        seenLabels.add(lm.name.toLowerCase());
+                    }
+                }
+
+                // 2. Query Nominatim Structured/Address Search (Best for exact house number interpolation & real neighborhood)
+                const nomQuery = parsed.houseNumber
+                    ? `${parsed.street}, ${parsed.houseNumber}, ${parsed.city}, PR, Brasil`
+                    : `${parsed.street}, ${parsed.city}, PR, Brasil`;
+                const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=4&countrycodes=br&viewbox=-51.60,-23.60,-50.80,-23.00&bounded=1&q=${encodeURIComponent(nomQuery)}`;
+
+                const photonSearch = hasCityInText(query) ? `${query}, Paraná` : `${query}, ${parsed.city}`;
+                const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(photonSearch)}&lat=${LONDRINA_CENTER.lat}&lon=${LONDRINA_CENTER.lng}&bbox=-51.65,-23.65,-50.80,-23.00&limit=5`;
+
+                const [nomRes, photonRes] = await Promise.allSettled([
+                    fetch(nomUrl, { signal: controller.signal, headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } }).then(r => r.ok ? r.json() : []),
+                    fetch(photonUrl, { signal: controller.signal }).then(r => r.ok ? r.json() : { features: [] })
+                ]);
+
+                if (nomRes.status === 'fulfilled' && Array.isArray(nomRes.value)) {
+                    for (const item of nomRes.value) {
+                        if (!item.lat || !item.lon) continue;
+                        const formatted = formatNominatimItem(item, parsed);
+                        const dist = calculateHaversine(LONDRINA_CENTER.lat, LONDRINA_CENTER.lng, formatted.lat, formatted.lng);
+                        if (dist <= 75) {
+                            const key = formatted.fullLabel.toLowerCase();
+                            if (!seenLabels.has(key)) {
+                                seenLabels.add(key);
+                                suggestions.push(formatted);
+                            }
+                        }
+                    }
+                }
+
+                if (photonRes.status === 'fulfilled' && photonRes.value && Array.isArray(photonRes.value.features)) {
+                    for (const feat of photonRes.value.features) {
+                        if (!feat.geometry || !Array.isArray(feat.geometry.coordinates)) continue;
+                        const formatted = formatPhotonFeature(feat, parsed);
+                        const dist = calculateHaversine(LONDRINA_CENTER.lat, LONDRINA_CENTER.lng, formatted.lat, formatted.lng);
+                        if (dist <= 75) {
+                            const key = formatted.fullLabel.toLowerCase();
+                            if (!seenLabels.has(key)) {
+                                seenLabels.add(key);
+                                suggestions.push(formatted);
+                            }
+                        }
+                    }
+                }
+
+                renderAutocompleteDropdown(fieldType, suggestions.slice(0, 6), parsed);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    dropdown.classList.add('hidden');
+                }
+            } finally {
+                if (spinner) spinner.classList.add('hidden');
+            }
+        }
+
+        function renderAutocompleteDropdown(fieldType, suggestions, parsedQuery) {
+            const dropdown = document.getElementById(`dropdown-autocomplete-${fieldType}`);
+            if (!dropdown) return;
+
+            dropdown.textContent = '';
+
+            if (!suggestions || suggestions.length === 0) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            suggestions.forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.setAttribute('role', 'option');
+                btn.className = 'w-full text-left px-3.5 py-2.5 hover:bg-cyan-500/15 focus:bg-cyan-500/15 transition-colors flex items-start gap-2.5 group';
+
+                const iconWrapper = document.createElement('div');
+                iconWrapper.className = fieldType === 'origem'
+                    ? 'mt-0.5 text-cyan-400 group-hover:scale-110 transition-transform shrink-0'
+                    : 'mt-0.5 text-pink-400 group-hover:scale-110 transition-transform shrink-0';
+                const icon = document.createElement('i');
+                icon.className = fieldType === 'origem' ? 'fa-solid fa-circle-dot text-xs' : 'fa-solid fa-location-dot text-xs';
+                iconWrapper.appendChild(icon);
+
+                const textContainer = document.createElement('div');
+                textContainer.className = 'overflow-hidden';
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'text-xs font-bold text-white truncate';
+                titleEl.textContent = item.mainTitle;
+
+                const subEl = document.createElement('div');
+                subEl.className = 'text-[11px] text-slate-400 truncate';
+                subEl.textContent = item.subTitle;
+
+                textContainer.appendChild(titleEl);
+                textContainer.appendChild(subEl);
+
+                btn.appendChild(iconWrapper);
+                btn.appendChild(textContainer);
+
+                btn.addEventListener('click', async () => {
+                    const inputEl = document.getElementById(`viagens-input-${fieldType}`);
+                    if (inputEl) {
+                        inputEl.value = item.fullLabel;
+                    }
+                    dropdown.classList.add('hidden');
+
+                    // Refine coordinate to the exact house number if user typed a number
+                    let finalLat = item.lat;
+                    let finalLng = item.lng;
+                    const reparsed = parseStreetAndNumber(item.fullLabel);
+                    const activeParsed = (parsedQuery && parsedQuery.houseNumber) ? parsedQuery : reparsed;
+
+                    if (activeParsed && activeParsed.houseNumber && !item.hasExactNumber) {
+                        const preciseCoord = await resolveExactHouseNumberCoord(activeParsed);
+                        if (preciseCoord) {
+                            finalLat = preciseCoord.lat;
+                            finalLng = preciseCoord.lng;
+                        }
+                    }
+
+                    selectedAutocompleteCoords[fieldType] = {
+                        lat: finalLat,
+                        lng: finalLng,
+                        name: item.fullLabel,
+                        queryText: item.fullLabel
+                    };
+
+                    updateViagensSummary();
+
+                    const otherField = fieldType === 'origem' ? 'destino' : 'origem';
+                    const otherInput = document.getElementById(`viagens-input-${otherField}`);
+                    if (otherInput && otherInput.value.trim().length > 2) {
+                        calculateViagensRoute();
+                    }
+                });
+
+                dropdown.appendChild(btn);
+            });
+
+            dropdown.classList.remove('hidden');
+        }
+
+        async function resolveExactHouseNumberCoord(parsed) {
+            if (!parsed || !parsed.street || !parsed.houseNumber) return null;
+
+            // Stage 1: Try Esri ArcGIS World Geocoder (Best PointAddress / StreetAddress range interpolation in Brazil)
+            const esriResult = await fetchEsriExactAddress(parsed);
+            if (esriResult) return esriResult;
+
+            // Stage 2: Try Nominatim Structured House Number Lookup (Exact OSM building/address node)
+            const streetQuery = `${parsed.houseNumber} ${parsed.street}`;
+            const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&street=${encodeURIComponent(streetQuery)}&city=${encodeURIComponent(parsed.city || 'Londrina')}&state=Paraná&countrycodes=br&limit=2`;
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const resp = await fetch(nomUrl, {
+                    signal: controller.signal,
+                    headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' }
+                });
+                clearTimeout(timeoutId);
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        // Only accept directly if Nominatim actually matched a specific house_number node
+                        const exactNode = data.find(d => d.address && d.address.house_number);
+                        if (exactNode) {
+                            const formatted = formatNominatimItem(exactNode, parsed);
+                            return {
+                                lat: formatted.lat,
+                                lng: formatted.lng,
+                                name: formatted.fullLabel,
+                                precision: 'exact_osm'
+                            };
+                        }
+                    }
+                }
+            } catch (e) {
+                // Continue to Stage 3
+            }
+
+            // Stage 3: Geodesic Street Polyline Interpolation (1m = 1 number from start of street)
+            const interpolated = await fetchInterpolatedStreetNumberCoord(parsed);
+            if (interpolated) return interpolated;
+
+            return null;
+        }
+
+        // Close autocomplete dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            ['origem', 'destino'].forEach(fieldType => {
+                const wrapper = document.getElementById(`wrapper-autocomplete-${fieldType}`);
+                const dropdown = document.getElementById(`dropdown-autocomplete-${fieldType}`);
+                if (wrapper && dropdown && !wrapper.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        });
+
+        function switchTab(tab) {
+            activeTab = tab;
+            
+            const tabEntregasBtn = document.getElementById('tab-entregas-btn');
+            const tabViagensBtn = document.getElementById('tab-viagens-btn');
+            const tabEntregasContent = document.getElementById('tab-entregas');
+            const tabViagensContent = document.getElementById('tab-viagens');
+            const heroTitle = document.getElementById('hero-title');
+            const heroSubtitle = document.getElementById('hero-subtitle');
+
+            if (tab === 'entregas') {
+                tabEntregasBtn.className = "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 neon-border-blue bg-cyan-950/60 text-cyan-300";
+                tabEntregasBtn.setAttribute('aria-selected', 'true');
+                tabViagensBtn.className = "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5";
+                tabViagensBtn.setAttribute('aria-selected', 'false');
+
+                tabEntregasContent.classList.remove('hidden');
+                tabViagensContent.classList.add('hidden');
+
+                heroTitle.innerHTML = `Sua encomenda no lugar certo, <br class="hidden sm:block"><span class="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 bg-clip-text text-transparent">no tempo certo.</span>`;
+                heroSubtitle.textContent = "Consulte nossa tabela fixa de encomendas por cidade ou simule seu envio imediato.";
+                
+                updateEntregasSummary();
+            } else {
+                tabViagensBtn.className = "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 neon-border-pink bg-pink-950/60 text-pink-300";
+                tabViagensBtn.setAttribute('aria-selected', 'true');
+                tabEntregasBtn.className = "flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5";
+                tabEntregasBtn.setAttribute('aria-selected', 'false');
+
+                tabEntregasContent.classList.add('hidden');
+                tabViagensContent.classList.remove('hidden');
+
+                heroTitle.innerHTML = `Vá para qualquer lugar com agilidade, <br class="hidden sm:block"><span class="bg-gradient-to-r from-pink-500 via-purple-400 to-cyan-400 bg-clip-text text-transparent">na garupa de quem entende.</span>`;
+                heroSubtitle.textContent = "Calcule a rota e distância exatas pelo mapa por R$ 2,50 por KM corrido.";
+
+                setTimeout(() => {
+                    initMapIfNeeded();
+                    if (map) {
+                        map.invalidateSize(true);
+                    }
+                    if (!routePolyline) {
+                        calculateViagensRoute();
+                    }
+                }, 200);
+
+                updateViagensSummary();
+            }
+        }
+
+        function selectEntregasCity(cityKey) {
+            currentEntregasCity = cityKey;
+            
+            const cities = ['londrina', 'cambe', 'ibipora', 'rolandia', 'arapongas'];
+            cities.forEach(c => {
+                const btn = document.getElementById(`btn-entregas-${c}`);
+                if (!btn) return;
+                if (c === cityKey) {
+                    btn.className = "entregas-city-btn flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center group bg-cyan-950/80 border-cyan-400 shadow-lg shadow-cyan-500/20 scale-[1.02]";
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = "fa-solid fa-location-dot text-base text-cyan-400 mb-1";
+                } else {
+                    btn.className = "entregas-city-btn flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center group bg-slate-900/60 border-white/10 hover:border-cyan-500/50";
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = "fa-solid fa-location-dot text-base text-slate-400 group-hover:text-cyan-400 mb-1";
+                }
+            });
+
+            updateEntregasSummary();
+        }
+
+        function selectEntregasMode(modeKey) {
+            currentEntregasMode = modeKey;
+
+            const btnInRota = document.getElementById('entregas-mode-inRota');
+            const btnFlash = document.getElementById('entregas-mode-flash');
+
+            if (modeKey === 'inRota') {
+                btnInRota.className = "entregas-mode-btn relative p-4 rounded-2xl border transition-all text-left flex items-start gap-4 bg-amber-950/40 border-amber-500/60 shadow-lg shadow-amber-500/10 scale-[1.01]";
+                btnFlash.className = "entregas-mode-btn relative p-4 rounded-2xl border transition-all text-left flex items-start gap-4 bg-slate-900/60 border-white/10 hover:border-pink-500/50 opacity-70 hover:opacity-100";
+            } else {
+                btnFlash.className = "entregas-mode-btn relative p-4 rounded-2xl border transition-all text-left flex items-start gap-4 bg-pink-950/40 border-pink-500/60 shadow-lg shadow-pink-500/10 scale-[1.01]";
+                btnInRota.className = "entregas-mode-btn relative p-4 rounded-2xl border transition-all text-left flex items-start gap-4 bg-slate-900/60 border-white/10 hover:border-amber-500/50 opacity-70 hover:opacity-100";
+            }
+
+            updateEntregasSummary();
+        }
+
+        function toggleSummaryRow(containerId, textId, value) {
+            const container = document.getElementById(containerId);
+            const textEl = document.getElementById(textId);
+            if (!container || !textEl) return;
+
+            if (value) {
+                textEl.textContent = value;
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function updateEntregasSummary() {
+            const cityObj = ENTREGAS_PRICING[currentEntregasCity] || ENTREGAS_PRICING.londrina;
+            const price = currentEntregasMode === 'inRota' ? cityObj.inRota : cityObj.flash;
+            const modeLabel = currentEntregasMode === 'inRota' ? 'IN ROTA (Econômica)' : 'FLASH (Prioritária)';
+
+            document.getElementById('entregas-summary-city').textContent = cityObj.name;
+            document.getElementById('entregas-summary-mode-name').textContent = modeLabel;
+            document.getElementById('entregas-summary-mode-name').className = currentEntregasMode === 'inRota' ? 'font-bold text-amber-300' : 'font-bold text-pink-400';
+            document.getElementById('entregas-badge-mode').textContent = currentEntregasMode === 'inRota' ? 'IN ROTA' : 'FLASH';
+            document.getElementById('entregas-badge-mode').className = currentEntregasMode === 'inRota' 
+                ? 'text-xs font-bold px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                : 'text-xs font-bold px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30';
+
+            document.getElementById('entregas-summary-price').textContent = price.toFixed(2).replace('.', ',');
+
+            const solicitante = document.getElementById('entregas-input-solicitante').value.trim();
+            const destinatario = document.getElementById('entregas-input-destinatario').value.trim();
+            const origem = document.getElementById('entregas-input-origem').value.trim();
+            const destino = document.getElementById('entregas-input-destino').value.trim();
+            const item = document.getElementById('entregas-input-item').value.trim();
+
+            toggleSummaryRow('entregas-container-solicitante', 'entregas-summary-solicitante', solicitante);
+            toggleSummaryRow('entregas-container-destinatario', 'entregas-summary-destinatario', destinatario);
+            toggleSummaryRow('entregas-container-origem', 'entregas-summary-origem', origem);
+            toggleSummaryRow('entregas-container-destino', 'entregas-summary-destino', destino);
+            toggleSummaryRow('entregas-container-item', 'entregas-summary-item', item);
+
+            // WhatsApp link build
+            let msg = `*TÁ NA PISTA - Pedido de Entrega*\n\n`;
+            msg += `📍 *Cidade:* ${cityObj.name}\n`;
+            msg += `⚡ *Modalidade:* ${modeLabel}\n`;
+            msg += `💰 *Valor Estimado:* R$ ${price.toFixed(2).replace('.', ',')}\n\n`;
+
+            if (solicitante) msg += `👤 *Solicitante:* ${solicitante}\n`;
+            if (destinatario) msg += `📦 *Destinatário:* ${destinatario}\n`;
+            if (origem) msg += `🏠 *Retirada:* ${origem}\n`;
+            if (destino) msg += `🎯 *Entrega:* ${destino}\n`;
+            if (item) msg += `📝 *Item:* ${item}\n`;
+
+            msg += `\nGostaria de confirmar esta entrega!`;
+
+            document.getElementById('btn-whatsapp-entregas').href = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`;
+        }
+
+        function onManualKmInput() {
+            const kmInput = document.getElementById('viagens-input-km');
+            const kmVal = parseFloat(kmInput ? kmInput.value : 0) || 0;
+            lastRouteMethod = 'Ajuste Manual';
+            lastRouteDurationMin = kmVal > 0 ? Math.max(1, Math.round(kmVal * 1.8)) : 0;
+            updateViagensSummary();
+        }
+
+        function updateViagensSummary() {
+            const kmInput = document.getElementById('viagens-input-km');
+            const rawKm = parseFloat(kmInput ? kmInput.value : 0);
+            const isValidKm = !isNaN(rawKm) && rawKm > 0;
+            const kmVal = isValidKm ? rawKm : 0;
+
+            const calculatedPrice = isValidKm ? (kmVal * VIAGENS_PRICE_PER_KM) : 0;
+
+            document.getElementById('viagens-summary-km').textContent = `${kmVal.toFixed(1)} KM`;
+            document.getElementById('viagens-summary-time').textContent = isValidKm ? `~${lastRouteDurationMin} min` : '--';
+            document.getElementById('viagens-summary-method').textContent = isValidKm ? lastRouteMethod : 'Aguardando rota';
+            document.getElementById('viagens-summary-method').className = lastRouteMethod.includes('Linear')
+                ? 'font-bold text-amber-400'
+                : 'font-semibold text-slate-200';
+
+            if (!isValidKm) {
+                document.getElementById('viagens-summary-formula').textContent = 'Informe uma distância válida';
+            } else {
+                document.getElementById('viagens-summary-formula').textContent = `${kmVal.toFixed(1)} km × R$ 2,50`;
+            }
+
+            document.getElementById('viagens-summary-price').textContent = calculatedPrice.toFixed(2).replace('.', ',');
+
+            const nome = document.getElementById('viagens-input-nome').value.trim();
+            const capacete = document.getElementById('viagens-input-capacete').value;
+            const obs = document.getElementById('viagens-input-obs').value.trim();
+            const origem = document.getElementById('viagens-input-origem').value.trim();
+            const destino = document.getElementById('viagens-input-destino').value.trim();
+
+            toggleSummaryRow('viagens-container-passageiro', 'viagens-summary-passageiro', nome);
+
+            const btnWhatsapp = document.getElementById('btn-whatsapp-viagens');
+            if (!isValidKm) {
+                btnWhatsapp.removeAttribute('href');
+                btnWhatsapp.classList.add('opacity-50', 'pointer-events-none');
+                return;
+            }
+            btnWhatsapp.classList.remove('opacity-50', 'pointer-events-none');
+
+            let msg = `*TÁ NA PISTA - Solicitação de Moto-Táxi*\n\n`;
+            if (origem) msg += `📍 *Origem (Embarque):* ${origem}\n`;
+            if (destino) msg += `🏁 *Destino:* ${destino}\n`;
+            msg += `📏 *Distância:* ${kmVal.toFixed(1)} KM (${lastRouteMethod})\n`;
+            msg += `⏱️ *Tempo Estimado:* ~${lastRouteDurationMin} min\n`;
+            msg += `💰 *Valor Estimado:* R$ ${calculatedPrice.toFixed(2).replace('.', ',')} (R$ 2,50/km)\n\n`;
+
+            if (nome) msg += `👤 *Passageiro:* ${nome}\n`;
+            msg += `🪖 *Capacete Extra:* ${capacete}\n`;
+            if (obs) msg += `💬 *Observações:* ${obs}\n`;
+
+            msg += `\nGostaria de solicitar este moto-táxi!`;
+
+            btnWhatsapp.href = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(msg)}`;
+        }
+
+        function scrollToSimulador() {
+            const el = document.getElementById('tab-entregas');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function setQuickDest(address) {
+            selectedAutocompleteCoords.destino = null;
+            document.getElementById('viagens-input-destino').value = address;
+            const dropdown = document.getElementById('dropdown-autocomplete-destino');
+            if (dropdown) dropdown.classList.add('hidden');
+            updateViagensSummary();
+            calculateViagensRoute();
+        }
+
+        let toastTimeout = null;
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('status-toast');
+            const toastIcon = document.getElementById('status-toast-icon');
+            const toastMsg = document.getElementById('status-toast-msg');
+
+            if (!toast || !toastMsg || !toastIcon) return;
+
+            toastMsg.textContent = msg;
+            if (type === 'error' || type === true) {
+                toast.className = "max-w-2xl mx-auto mb-6 p-4 rounded-2xl glass-card border border-pink-500/50 flex items-center gap-3 text-xs sm:text-sm text-pink-200 shadow-xl transition-all";
+                toastIcon.className = "fa-solid fa-circle-exclamation text-pink-400 text-lg shrink-0";
+            } else if (type === 'warning') {
+                toast.className = "max-w-2xl mx-auto mb-6 p-4 rounded-2xl glass-card border border-amber-500/50 flex items-center gap-3 text-xs sm:text-sm text-amber-200 shadow-xl transition-all";
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg shrink-0";
+            } else {
+                toast.className = "max-w-2xl mx-auto mb-6 p-4 rounded-2xl glass-card border border-cyan-500/50 flex items-center gap-3 text-xs sm:text-sm text-cyan-200 shadow-xl transition-all";
+                toastIcon.className = "fa-solid fa-circle-check text-cyan-400 text-lg shrink-0";
+            }
+
+            toast.classList.remove('hidden');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 6500);
+        }
+
+        function initMapIfNeeded() {
+            if (map) return;
+
+            const mapContainer = document.getElementById('viagens-map');
+            if (!mapContainer) return;
+
+            map = L.map('viagens-map', {
+                zoomControl: true,
+                scrollWheelZoom: false
+            }).setView([LONDRINA_CENTER.lat, LONDRINA_CENTER.lng], 13);
+
+            // Esri World Topo Map with Dark Mode CSS Filter - 100% Free, No API Key Required, No 403 Block
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; &copy; OpenStreetMap contributors',
+                maxZoom: 18,
+                className: 'map-tiles-dark-filter'
+            }).addTo(map);
+        }
+
+        async function fetchPhotonGeocode(query) {
+            const parsed = parseStreetAndNumber(query);
+            const searchStr = hasCityInText(query) ? `${query}, Paraná` : `${query}, ${parsed.city}`;
+            const bbox = '-51.65,-23.65,-50.80,-23.00';
+            const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(searchStr)}&lat=${LONDRINA_CENTER.lat}&lon=${LONDRINA_CENTER.lng}&bbox=${bbox}&limit=1`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+            try {
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!resp.ok) return null;
+                const data = await resp.json();
+                if (data && Array.isArray(data.features) && data.features.length > 0) {
+                    const item = formatPhotonFeature(data.features[0], parsed);
+                    return {
+                        lat: item.lat,
+                        lng: item.lng,
+                        name: item.fullLabel
+                    };
+                }
+                return null;
+            } catch (e) {
+                clearTimeout(timeoutId);
+                return null;
+            }
+        }
+
+        async function fetchNominatim(query, useBounding = true) {
+            const parsed = parseStreetAndNumber(query);
+            const searchParam = encodeURIComponent(query);
+            let url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${searchParam}&limit=1&countrycodes=br`;
+            
+            if (useBounding) {
+                url += `&viewbox=-51.60,-23.60,-50.80,-23.00&bounded=1`;
+            }
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+            try {
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' }
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP_${response.status}`);
+                }
+
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0 && data[0].lat && data[0].lon) {
+                    const formatted = formatNominatimItem(data[0], parsed);
+                    return {
+                        lat: formatted.lat,
+                        lng: formatted.lng,
+                        name: formatted.fullLabel
+                    };
+                }
+                return null;
+            } catch (err) {
+                clearTimeout(timeoutId);
+                throw new Error("NOMINATIM_UNAVAILABLE");
+            }
+        }
+
+        async function geocodeAddress(query, fieldType = null) {
+            const rawQuery = query.trim();
+
+            // 0. Use pre-selected coordinates from Autocomplete if unchanged
+            if (fieldType && selectedAutocompleteCoords[fieldType] && selectedAutocompleteCoords[fieldType].queryText === rawQuery) {
+                return {
+                    lat: selectedAutocompleteCoords[fieldType].lat,
+                    lng: selectedAutocompleteCoords[fieldType].lng,
+                    name: selectedAutocompleteCoords[fieldType].name
+                };
+            }
+
+            const normalizedForLandmark = rawQuery
+                .toLowerCase()
+                .replace(/,\s*londrina(\s*-\s*pr)?$/i, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            // 1. Check SPECIFIC iconic landmarks ONLY on exact whole-string match
+            for (const landmark of SPECIFIC_LANDMARKS) {
+                if (landmark.keys.includes(normalizedForLandmark)) {
+                    return { lat: landmark.lat, lng: landmark.lng, name: landmark.name };
+                }
+            }
+
+            const parsed = parseStreetAndNumber(rawQuery);
+
+            // 2. If user provided a house number (e.g., "Rua Caviúna, 10, Londrina - Leonor"),
+            // resolve the exact position of that number along the street!
+            if (parsed.houseNumber) {
+                const exactHouseCoord = await resolveExactHouseNumberCoord(parsed);
+                if (exactHouseCoord) {
+                    const distFromCenter = calculateHaversine(LONDRINA_CENTER.lat, LONDRINA_CENTER.lng, exactHouseCoord.lat, exactHouseCoord.lng);
+                    if (distFromCenter <= 70) {
+                        const badge = document.getElementById('pin-precision-badge');
+                        if (badge) badge.classList.remove('hidden');
+                        return {
+                            lat: exactHouseCoord.lat,
+                            lng: exactHouseCoord.lng,
+                            name: exactHouseCoord.name
+                        };
+                    }
+                }
+            }
+
+            // 3. Try Esri Geocoder even for street/neighborhood queries without number
+            const esriGeneral = await fetchEsriExactAddress(parsed);
+            if (esriGeneral) {
+                return {
+                    lat: esriGeneral.lat,
+                    lng: esriGeneral.lng,
+                    name: esriGeneral.name
+                };
+            }
+
+            // 4. Fallback to Nominatim API with cleaned street + neighborhood + city
+            const cleanSearchQuery = `${parsed.street}${parsed.neighborhood ? ', ' + parsed.neighborhood : ''}, ${parsed.city}, PR, Brasil`;
+
+            let networkFailure = false;
+            let result = null;
+
+            try {
+                result = await fetchNominatim(cleanSearchQuery, true);
+            } catch (e) {
+                networkFailure = true;
+            }
+
+            if (!result && !networkFailure) {
+                try {
+                    result = await fetchNominatim(cleanSearchQuery, false);
+                } catch (e) {
+                    networkFailure = true;
+                }
+            }
+
+            // 5. Fallback to Photon API if Nominatim returned empty
+            if (!result) {
+                const photonResult = await fetchPhotonGeocode(`${parsed.street}, ${parsed.city}`);
+                if (photonResult) {
+                    result = photonResult;
+                }
+            }
+
+            if (networkFailure && !result) {
+                throw new Error("Falha de conexão com o serviço de mapas. Verifique sua internet ou digite o KM manualmente.");
+            }
+
+            if (!result) {
+                throw new Error(`Endereço não encontrado: "${rawQuery}". Selecione uma sugestão da lista ou informe rua, número e cidade.`);
+            }
+
+            const distFromCenter = calculateHaversine(LONDRINA_CENTER.lat, LONDRINA_CENTER.lng, result.lat, result.lng);
+            if (distFromCenter > 70) {
+                throw new Error(`O endereço "${rawQuery}" fica fora da área de atendimento (> 70 km de Londrina). Especifique a cidade correta.`);
+            }
+
+            return result;
+        }
+
+        async function recalculateRouteFromMarkers(originCoords, destCoords) {
+            const statusBadge = document.getElementById('map-status-badge');
+            let distanceKm = 0;
+            let durationMin = 0;
+            let latLngs = [];
+            let usedLinearFallback = false;
+
+            const straightDistKm = calculateHaversine(originCoords.lat, originCoords.lng, destCoords.lat, destCoords.lng);
+
+            try {
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoords.lng},${originCoords.lat};${destCoords.lng},${destCoords.lat}?overview=full&geometries=geojson`;
+                const osrmController = new AbortController();
+                const osrmTimeout = setTimeout(() => osrmController.abort(), 4000);
+
+                const osrmResp = await fetch(osrmUrl, { signal: osrmController.signal });
+                clearTimeout(osrmTimeout);
+                
+                if (osrmResp.ok) {
+                    const osrmData = await osrmResp.json();
+                    if (osrmData && Array.isArray(osrmData.routes) && osrmData.routes.length > 0) {
+                        const route = osrmData.routes[0];
+                        if (typeof route.distance === 'number' && route.geometry && Array.isArray(route.geometry.coordinates)) {
+                            distanceKm = Math.max(0.1, parseFloat((route.distance / 1000).toFixed(1)));
+                            durationMin = Math.max(1, Math.round((route.duration || (distanceKm * 110)) / 60));
+                            latLngs = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("OSRM fallback on marker drag:", err);
+            }
+
+            if (!latLngs || latLngs.length === 0) {
+                usedLinearFallback = true;
+                distanceKm = Math.max(0.1, parseFloat((straightDistKm * HAVERSINE_URBAN_FACTOR).toFixed(1)));
+                durationMin = Math.max(1, Math.round(distanceKm * 2));
+                latLngs = [
+                    [originCoords.lat, originCoords.lng],
+                    [destCoords.lat, destCoords.lng]
+                ];
+            }
+
+            lastRouteDurationMin = durationMin;
+            lastRouteMethod = usedLinearFallback ? 'Estimativa Linear (+30%)' : 'Via Estrada (OSRM)';
+            document.getElementById('viagens-input-km').value = distanceKm.toFixed(1);
+
+            if (routePolyline) map.removeLayer(routePolyline);
+            routePolyline = L.polyline(latLngs, {
+                color: usedLinearFallback ? '#f59e0b' : '#00f2fe',
+                weight: 5,
+                opacity: 0.9,
+                dashArray: usedLinearFallback ? '8, 8' : null,
+                lineJoin: 'round'
+            }).addTo(map);
+
+            updateViagensSummary();
+            if (statusBadge) {
+                statusBadge.textContent = `Rota Viária: ${distanceKm} KM (~${durationMin} min)`;
+                statusBadge.className = "text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-medium";
+            }
+        }
+
+        async function calculateViagensRoute() {
+            const origemInput = document.getElementById('viagens-input-origem').value.trim();
+            const destinoInput = document.getElementById('viagens-input-destino').value.trim();
+
+            // Hide autocomplete dropdowns when calculating route
+            ['origem', 'destino'].forEach(ft => {
+                const dd = document.getElementById(`dropdown-autocomplete-${ft}`);
+                if (dd) dd.classList.add('hidden');
+            });
+
+            if (!origemInput || !destinoInput) {
+                showToast("Preencha o ponto de Origem e o Destino para calcular a rota.", 'error');
+                return;
+            }
+
+            if (origemInput.toLowerCase() === destinoInput.toLowerCase()) {
+                showToast("O ponto de Origem e o Destino são idênticos. Informe endereços diferentes.", 'error');
+                return;
+            }
+
+            const btnCalc = document.getElementById('btn-calc-route');
+            const btnText = document.getElementById('btn-calc-route-text');
+            const statusBadge = document.getElementById('map-status-badge');
+            
+            btnCalc.disabled = true;
+            btnText.innerHTML = `<i class="fa-solid fa-spinner animate-spin" aria-hidden="true"></i> Localizando e traçando rota...`;
+            statusBadge.textContent = "Calculando...";
+            statusBadge.className = "text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium";
+
+            try {
+                initMapIfNeeded();
+
+                // 1. Geocode origin and destination using Photon / Nominatim
+                const originCoords = await geocodeAddress(origemInput, 'origem');
+                const destCoords = await geocodeAddress(destinoInput, 'destino');
+
+                const straightDistKm = calculateHaversine(originCoords.lat, originCoords.lng, destCoords.lat, destCoords.lng);
+                if (straightDistKm < 0.05) {
+                    throw new Error("Origem e destino apontam para o mesmo local (< 50 metros). Especifique o número ou rua de destino.");
+                }
+
+                let distanceKm = 0;
+                let durationMin = 0;
+                let latLngs = [];
+                let usedLinearFallback = false;
+
+                // 2. Attempt OSRM Road Routing with strict 4-second timeout
+                try {
+                    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoords.lng},${originCoords.lat};${destCoords.lng},${destCoords.lat}?overview=full&geometries=geojson`;
+                    
+                    const osrmController = new AbortController();
+                    const osrmTimeout = setTimeout(() => osrmController.abort(), 4000);
+
+                    const osrmResp = await fetch(osrmUrl, { signal: osrmController.signal });
+                    clearTimeout(osrmTimeout);
+                    
+                    if (osrmResp.ok) {
+                        const osrmData = await osrmResp.json();
+                        if (osrmData && Array.isArray(osrmData.routes) && osrmData.routes.length > 0) {
+                            const route = osrmData.routes[0];
+                            if (typeof route.distance === 'number' && route.geometry && Array.isArray(route.geometry.coordinates)) {
+                                distanceKm = Math.max(0.1, parseFloat((route.distance / 1000).toFixed(1)));
+                                durationMin = Math.max(1, Math.round((route.duration || (distanceKm * 110)) / 60));
+                                latLngs = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                            }
+                        }
+                    }
+                } catch (osrmErr) {
+                    console.warn("OSRM routing timeout or error, activating transparent linear estimation:", osrmErr);
+                }
+
+                // 3. Transparent Fallback if OSRM Road Router is unreachable
+                if (!latLngs || latLngs.length === 0) {
+                    usedLinearFallback = true;
+                    distanceKm = Math.max(0.1, parseFloat((straightDistKm * HAVERSINE_URBAN_FACTOR).toFixed(1)));
+                    durationMin = Math.max(1, Math.round(distanceKm * 2));
+                    latLngs = [
+                        [originCoords.lat, originCoords.lng],
+                        [destCoords.lat, destCoords.lng]
+                    ];
+                }
+
+                // Update state & UI inputs
+                lastRouteDurationMin = durationMin;
+                lastRouteMethod = usedLinearFallback
+                    ? 'Estimativa Linear (+30%)'
+                    : 'Via Estrada (OSRM)';
+
+                document.getElementById('viagens-input-km').value = distanceKm.toFixed(1);
+
+                // 4. Update Leaflet Map Markers with HTML Escaping to prevent DOM XSS
+                if (originMarker) map.removeLayer(originMarker);
+                if (destMarker) map.removeLayer(destMarker);
+                if (routePolyline) map.removeLayer(routePolyline);
+
+                const iconOrigin = L.divIcon({
+                    className: 'custom-pin-origin',
+                    html: '<i class="fa-solid fa-circle-dot" aria-hidden="true"></i>',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const iconDest = L.divIcon({
+                    className: 'custom-pin-dest',
+                    html: '<i class="fa-solid fa-location-dot" aria-hidden="true"></i>',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const safeOriginName = escapeHTML(originCoords.name);
+                const safeDestName = escapeHTML(destCoords.name);
+
+                originMarker = L.marker([originCoords.lat, originCoords.lng], { icon: iconOrigin, draggable: true })
+                    .addTo(map)
+                    .bindPopup(`<b>📍 Embarque Exato:</b><br>${safeOriginName}<br><span style="font-size:10px;color:#64748b;">(Arraste o pino para ajuste fino)</span>`);
+
+                destMarker = L.marker([destCoords.lat, destCoords.lng], { icon: iconDest, draggable: true })
+                    .addTo(map)
+                    .bindPopup(`<b>🏁 Desembarque Exato:</b><br>${safeDestName}<br><span style="font-size:10px;color:#64748b;">(Arraste o pino para ajuste fino)</span>`);
+
+                // Allow user to drag origin or destination pins for pinpoint precision (Uber/99 style)
+                originMarker.on('dragend', async () => {
+                    const pos = originMarker.getLatLng();
+                    originCoords.lat = pos.lat;
+                    originCoords.lng = pos.lng;
+                    selectedAutocompleteCoords.origem = {
+                        lat: pos.lat,
+                        lng: pos.lng,
+                        name: originCoords.name,
+                        queryText: document.getElementById('viagens-input-origem').value.trim()
+                    };
+                    await recalculateRouteFromMarkers(originCoords, destCoords);
+                });
+
+                destMarker.on('dragend', async () => {
+                    const pos = destMarker.getLatLng();
+                    destCoords.lat = pos.lat;
+                    destCoords.lng = pos.lng;
+                    selectedAutocompleteCoords.destino = {
+                        lat: pos.lat,
+                        lng: pos.lng,
+                        name: destCoords.name,
+                        queryText: document.getElementById('viagens-input-destino').value.trim()
+                    };
+                    await recalculateRouteFromMarkers(originCoords, destCoords);
+                });
+
+                routePolyline = L.polyline(latLngs, {
+                    color: usedLinearFallback ? '#f59e0b' : '#00f2fe',
+                    weight: 5,
+                    opacity: 0.9,
+                    dashArray: usedLinearFallback ? '8, 8' : null,
+                    lineJoin: 'round'
+                }).addTo(map);
+
+                map.invalidateSize();
+                map.fitBounds(routePolyline.getBounds(), { padding: [45, 45] });
+
+                updateViagensSummary();
+
+                if (usedLinearFallback) {
+                    statusBadge.textContent = `⚠️ Estimativa Linear (${distanceKm} KM)`;
+                    statusBadge.className = "text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium";
+                    showToast(`Servidor de rotas de rua ocupado. Distância estimada por raio linear (+30% margem urbana): ${distanceKm} KM. Confira o KM antes de solicitar.`, 'warning');
+                } else {
+                    statusBadge.textContent = `Rota Viária: ${distanceKm} KM (~${durationMin} min)`;
+                    statusBadge.className = "text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-medium";
+                    showToast(`Rota real pelas ruas traçada! Distância: ${distanceKm} KM (Tempo estimado: ~${durationMin} min).`, 'success');
+                }
+
+            } catch (err) {
+                console.error("Route validation error:", err);
+                statusBadge.textContent = "Endereço Não Localizado";
+                statusBadge.className = "text-xs bg-pink-500/20 text-pink-300 border border-pink-500/30 px-2 py-0.5 rounded-full font-medium";
+                showToast(err.message || "Erro ao localizar endereço. Tente informar o nome da rua, número e cidade.", 'error');
+            } finally {
+                btnCalc.disabled = false;
+                btnText.innerHTML = `📍 Calcular Rota e Distância Automática`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            selectEntregasCity('londrina');
+            selectEntregasMode('inRota');
+            updateEntregasSummary();
+            updateViagensSummary();
+        });
+
+        window.addEventListener('resize', () => {
+            if (map && activeTab === 'viagens') {
+                map.invalidateSize();
+            }
+        });
+    </script>
+</body>
+</html>
